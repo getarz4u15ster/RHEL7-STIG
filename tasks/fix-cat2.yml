@@ -322,23 +322,7 @@
       - RHEL-07-010330
 
 - name: "MEDIUM | RHEL-07-010340 | PATCH | Users must provide a password for privilege escalation."
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-  command: "sed -i -e 's/NOPASSWD: ALL/ALL/g' /etc/sudoers"
-=======
   command: "true"
-  lineinfile:
-      path: /etc/sudoers
-      regexp: 'NOPASSWD: ALL'
-      line: 'ALL'
-#      state: absent
-#  with_items:
-#    - { regexp: '(?i)^#?NOPASSWD:' }
-#    - { regexp: '(?i)^#?nopasswd:' }
->>>>>>> Stashed changes
-=======
-  command: "true"
->>>>>>> 18dfa8f4ad8e72d6e8e9a4a42f6a3cc352903659
   tags:
       - cat2
       - medium
@@ -370,7 +354,7 @@
       regexp: '^#?PermitUserEnvironment'
       line: PermitUserEnvironment no
       validate: sshd -t -f %s
-  notify: restart sshd      
+  notify: restart sshd
   tags:
       - cat2
       - medium
@@ -433,12 +417,16 @@
       - RHEL-07-020100
 
 - name: "MEDIUM | RHEL-07-020110 | PATCH | File system automounter must be disabled unless required."
-  command: "true"
+  systemd:
+      name: autofs
+      enabled: no
+  when: rhel_07_020110_audit.stat.exists
   tags:
       - cat2
       - medium
       - patch
       - RHEL-07-020110
+      - autofs
 
 - name: "MEDIUM | RHEL-07-020240 | PATCH | The operating system must define default permissions for all authenticated users in such a way that the user can only read and modify their own files."
   command: "true"
@@ -489,7 +477,10 @@
       - RHEL-07-020600
 
 - name: "MEDIUM | RHEL-07-020610 | PATCH | All local interactive user accounts, upon creation, must be assigned a home directory."
-  command: "true"
+  lineinfile:
+      dest: /etc/login.defs
+      regexp: '^#?CREATE_HOME'
+      line: "CREATE_HOME yes"
   tags:
       - cat2
       - medium
@@ -657,7 +648,10 @@
       - RHEL-07-021100
 
 - name: "MEDIUM | RHEL-07-021110 | PATCH | If the cron.allow file exists it must be owned by root."
-  command: "true"
+  file:
+      path: /etc/cron.allow
+      owner: root
+  when: rhel_07_021110_audit.stat.exists
   tags:
       - cat2
       - medium
@@ -665,7 +659,10 @@
       - RHEL-07-021110
 
 - name: "MEDIUM | RHEL-07-021120 | PATCH | If the cron.allow file exists it must be group-owned by root."
-  command: "true"
+  file:
+      path: /etc/cron.allow
+      group: root
+  when: rhel_07_021120_audit.stat.exists
   tags:
       - cat2
       - medium
@@ -729,7 +726,12 @@
       - RHEL-07-030320
 
 - name: "MEDIUM | RHEL-07-030321 | PATCH | The audit system must take appropriate action when there is an error sending audit records to a remote system."
-  command: "true"
+  lineinfile:
+      state: present
+      dest: /etc/audisp/audisp-remote.conf
+      regexp: '^#?network_failure_action'
+      line: "network_failure_action = {{ rhel7stig_network_failure_action }}"
+  when: rhel_07_030321_audit.stat.exists
   tags:
       - cat2
       - medium
@@ -1177,12 +1179,20 @@
       - RHEL-07-030870
 
 - name: "MEDIUM | RHEL-07-030871 | PATCH | The operating system must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/group."
-  command: "true"
+  lineinfile:
+      dest: "{{ item.stat.path }}/audit.rules"
+      regexp: '^#?-w /etc/group'
+      line: '-w /etc/group -p wa -k identity'
+      create: yes
+  with_items: "{{ rhel_07_030871_audit.results }}"
+  when: item.stat.exists
+  notify: restart auditd
   tags:
       - cat2
       - medium
       - patch
       - RHEL-07-030871
+      - auditd
 
 - name: "MEDIUM | RHEL-07-030872 | PATCH | The operating system must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/gshadow."
   command: "true"
@@ -1201,12 +1211,20 @@
       - RHEL-07-030873
 
 - name: "MEDIUM | RHEL-07-030874 | PATCH | The operating system must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/opasswd."
-  command: "true"
+  lineinfile:
+      dest: "{{ item.stat.path }}/audit.rules"
+      regexp: '^#?-w /etc/opasswd'
+      line: '-w /etc/opasswd -p wa -k identity'
+      create: yes
+  with_items: "{{ rhel_07_030874_audit.results }}"
+  when: item.stat.exists
+  notify: restart auditd
   tags:
       - cat2
       - medium
       - patch
       - RHEL-07-030874
+      - auditd
 
 - name: "MEDIUM | RHEL-07-030880 | PATCH | All uses of the rename command must be audited."
   command: "true"
@@ -1247,15 +1265,6 @@
       - medium
       - patch
       - RHEL-07-031000
-      - rsyslog
-
-- name: "MEDIUM | RHEL-07-031010 | PATCH | The rsyslog daemon must not accept log messages from other servers unless the server is being used for log aggregation."
-  command: "true"
-  tags:
-      - cat2
-      - medium
-      - patch
-      - RHEL-07-031010
       - rsyslog
 
 - name: "MEDIUM | RHEL-07-032010 | PATCH | The system must update the DoD-approved virus scan program every seven days or more frequently."
@@ -1597,7 +1606,9 @@
       - firewalld
 
 - name: "MEDIUM | RHEL-07-040520 | PATCH | The operating system must enable an application firewall, if available."
-  command: "true"
+  yum:
+      name: firewalld
+      state: present
   tags:
       - cat2
       - medium
@@ -1712,15 +1723,24 @@
       - RHEL-07-040670
 
 - name: "MEDIUM | RHEL-07-040680 | PATCH | The system must be configured to prevent unrestricted mail relaying."
-  command: "true"
+  lineinfile:
+    dest: /etc/postfix/main.cf
+    regexp: '^#?postconf'
+    line: "postconf -e 'smtpd_client_restrictions = permit_mynetworks,reject'"
   tags:
       - cat2
       - medium
       - patch
       - RHEL-07-040680
+      - postfix
 
 - name: "MEDIUM | RHEL-07-040720 | PATCH | If the Trivial File Transfer Protocol (TFTP) server is required, the TFTP daemon must be configured to operate in secure mode."
-  command: "true"
+  lineinfile:
+      dest: /etc/xinetd.d/tftp
+      regexp: '^#?server_args'
+      line: "server_args = -s /tftpboot"
+  notify: restart xinetd
+  when: rhel_07_040720_audit.stat.exists
   tags:
       - cat2
       - medium
@@ -1834,3 +1854,17 @@
       - medium
       - patch
       - RHEL-07-041010
+
+
+- name: "MEDIUM | RHEL-07-031010 | PATCH | The rsyslog daemon must not accept log messages from other servers unless the server is being used for log aggregation."
+  lineinfile:
+      dest: /etc/rsyslog.conf
+      regexp: '^#?\$ModLoad imtcp'
+      state: absent
+  notify: restart rsyslogd
+  tags:
+      - cat2
+      - medium
+      - patch
+      - RHEL-07-031010
+
