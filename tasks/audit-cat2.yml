@@ -92,3 +92,16 @@
       - audit
       - RHEL-07-041010
       - always
+
+- name: "MEDIUM | RHEL-07-021100 | AUDIT | Cron logging must be implemented."
+  command: grep 'cron.* /var/log/cron.log' /etc/rsyslog.conf
+  failed_when: no
+  changed_when: no
+  ignore_errors: yes
+  register: rhel_07_021100_audit
+  tags:
+      - cat2
+      - high
+      - cron
+      - RHEL-07-021100
+      - always
