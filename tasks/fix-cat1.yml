@@ -369,6 +369,7 @@
       - RHEL-07-040390
       - ssh
 
+<<<<<<< HEAD
 - name: "HIGH | RHEL-07-010340 | PATCH | Verify the operating system requires users to supply a password for privilege escalation."
   lineinfile:
       dest: /etc/sudoers
@@ -383,3 +384,5 @@
       - patch
       - RHEL-07-010340
       - sudo
+=======
+>>>>>>> ecf64ce1f333c7751d2da44b885280baa7239cde
