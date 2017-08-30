@@ -369,3 +369,21 @@
       - RHEL-07-040390
       - ssh
 
+<<<<<<< Updated upstream
+=======
+- name: "HIGH | RHEL-07-010340 | PATCH | Verify the operating system requires users to supply a password for privilege escalation."
+  lineinfile:
+      dest: /etc/sudoers
+#      regexp: "{{ item.regexp }}"
+      regexp: (?i)^#?NOPASSWD:
+      state: absent
+#  with_items:
+#    - { regexp: '^NOPASSWD:' }
+#    - { regexp: '^nopasswd:' }
+  tags:
+      - cat1
+      - high
+      - patch
+      - RHEL-07-010340
+      - sudo
+>>>>>>> Stashed changes
