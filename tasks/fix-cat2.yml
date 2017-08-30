@@ -322,6 +322,7 @@
       - RHEL-07-010330
 
 - name: "MEDIUM | RHEL-07-010340 | PATCH | Users must provide a password for privilege escalation."
+<<<<<<< HEAD
 <<<<<<< Updated upstream
   command: "sed -i -e 's/NOPASSWD: ALL/ALL/g' /etc/sudoers"
 =======
@@ -335,6 +336,9 @@
 #    - { regexp: '(?i)^#?NOPASSWD:' }
 #    - { regexp: '(?i)^#?nopasswd:' }
 >>>>>>> Stashed changes
+=======
+  command: "true"
+>>>>>>> 18dfa8f4ad8e72d6e8e9a4a42f6a3cc352903659
   tags:
       - cat2
       - medium
@@ -646,10 +650,6 @@
 
 - name: "MEDIUM | RHEL-07-021100 | PATCH | Cron logging must be implemented."
   lineinfile:
-      dest: /etc/rsyslogd.conf
-      insertbefore: BOF
-      line: '^cron.* /var/log/cron.log' 
-      when: rhel_07_021100_audit.stat.exist
   tags:
       - cat2
       - medium
